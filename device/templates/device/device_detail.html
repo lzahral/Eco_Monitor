@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tz %}
+{% block stylesheets %}
+    <style>
+        .hide{
+            display: none
+        }
+        .dataTables_filter{
+            display: none
+        }
+    </style>
+{% endblock stylesheets %}
+{% block content %}
+<div class="col-md-12 col-xl-12 col-xs-12 col-sm-12">
+    <div class="widget has-shadow p-5">
+                <h4 class="main-content-label mb-4">نام دستگاه: {{device.name}}</h4>
+                <div class="table-responsive">
+                <table id="my-sorting-table" class="table mb-0 text-center">
+                    <thead class='text-center'>
+                        <tr>
+                            <th>تاریخ</th>
+                            <th>a1</th>
+                            <th>a2</th>
+                            <th>a3</th>
+                            <th>a4</th>
+                            <th>d1</th>
+                            <th>d2</th>
+                            <th>d3</th>
+                            <th>d4</th>
+                            <th>d5</th>
+                            <th>d6</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td>{{log.date|date:"Y/m/d"}} {{log.time|timezone:'Asia/Tehran'|date:"H:i:s"}}</td>
+                                <td>{{log.a1}}</td>
+                                <td>{{log.a2}}</td>
+                                <td>{{log.a3}}</td>
+                                <td>{{log.a4}}</td>
+                                <td>
+                                    {% if log.d1 == None %}
+                                        <span class="badge-text badge-text-small light">غیرفعال</span>
+                                    {% else %}
+                                        {% if log.d1 %}
+                                            <span class="badge-text badge-text-small success">روشن</span>
+                                        {% else %}
+                                            <span class="badge-text badge-text-small danger">خاموش</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.d2 == None %}
+                                        <span class="badge-text badge-text-small light">غیرفعال</span>
+                                    {% else %}
+                                        {% if log.d2 %}
+                                            <span class="badge-text badge-text-small success">روشن</span>
+                                        {% else %}
+                                            <span class="badge-text badge-text-small danger">خاموش</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.d3 == None %}
+                                        <span class="badge-text badge-text-small light">غیرفعال</span>
+                                    {% else %}
+                                        {% if log.d3 %}
+                                            <span class="badge-text badge-text-small success">روشن</span>
+                                        {% else %}
+                                            <span class="badge-text badge-text-small danger">خاموش</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.d4 == None %}
+                                        <span class="badge-text badge-text-small light">غیرفعال</span>
+                                    {% else %}
+                                        {% if log.d4 %}
+                                            <span class="badge-text badge-text-small success">روشن</span>
+                                        {% else %}
+                                            <span class="badge-text badge-text-small danger">خاموش</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.d5 == None %}
+                                        <span class="badge-text badge-text-small light">غیرفعال</span>
+                                    {% else %}
+                                        {% if log.d5 %}
+                                            <span class="badge-text badge-text-small success">روشن</span>
+                                        {% else %}
+                                            <span class="badge-text badge-text-small danger">خاموش</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.d6 == None %}
+                                        <span class="badge-text badge-text-small light">غیرفعال</span>
+                                    {% else %}
+                                        {% if log.d6 %}
+                                            <span class="badge-text badge-text-small success">روشن</span>
+                                        {% else %}
+                                            <span class="badge-text badge-text-small danger">خاموش</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>  
+            </div>
+            <div class='row pt-4'>
+                <canvas id="vertical-chart-02" style="display: block; width: 859px; height: 429px;" width="859" height="429" class="col-xl-6 chartjs-render-monitor"></canvas>               
+                <canvas id="line-chart-02" style="display: block; width: 756px; height: 378px;" width="756" height="378" class="col-xl-6 chartjs-render-monitor"></canvas>
+            </div>
+    </div>
+</div>
+{%endblock%}
+{% block scripts %}
+<script>
+	$(function () {
+		$('#my-sorting-table').DataTable({
+			"lengthMenu": [
+				[ 10, 50, -1],
+				[ 10,50,100]
+			],
+			"order": [
+				[0, "desc"]
+			]
+		});
+	});
+</script>
+<script>
+    var ctx = document.getElementById('line-chart-02').getContext("2d");
+
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for log in chartLogs %}"{{log.date|date:'Y/n/d'}}",{% endfor %}],
+            datasets: [{
+                label: "d1",
+                borderColor: "#e76c90",
+                pointBackgroundColor: "#e76c90",
+                pointHoverBorderColor: "#e76c90",
+                pointHoverBackgroundColor: "#e76c90",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for log in chartLogs %}"{{log.on.0}}",{% endfor %}],
+            },{
+                label: "d2",
+                borderColor: "#FFB6C1",
+                pointBackgroundColor: "#FFB6C1",
+                pointHoverBorderColor: "#FFB6C1",
+                pointHoverBackgroundColor: "#FFB6C1",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for log in chartLogs %}"{{log.on.1}}",{% endfor %}],
+            },{
+                label: "d3",
+                borderColor: "#dde1e9",
+                pointBackgroundColor: "#dde1e9",
+                pointHoverBorderColor: "#dde1e9",
+                pointHoverBackgroundColor: "#dde1e9",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for log in chartLogs %}"{{log.on.2}}",{% endfor %}],
+            },{
+                label: "d4",
+                borderColor: "#708090",
+                pointBackgroundColor: "#708090",
+                pointHoverBorderColor: "#708090",
+                pointHoverBackgroundColor: "#708090",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for log in chartLogs %}"{{log.on.3}}",{% endfor %}],
+            },{
+                label: "d5",
+                borderColor: "#8A2BE2",
+                pointBackgroundColor: "#8A2BE2",
+                pointHoverBorderColor: "#8A2BE2",
+                pointHoverBackgroundColor: "#8A2BE2",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for log in chartLogs %}"{{log.on.4}}",{% endfor %}],
+            },{
+                label: "d6",
+                borderColor: "#800080",
+                pointBackgroundColor: "#800080",
+                pointHoverBorderColor: "#800080",
+                pointHoverBackgroundColor: "#800080",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for log in chartLogs %}"{{log.on.5}}",{% endfor %}],
+            }]
+        },
+        options: {
+			legend: {
+				display: true,
+				position: 'top',
+				labels: {
+					fontColor: "#2e3451",
+					usePointStyle: true,
+					fontSize: 13
+				}
+			},
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 13,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        display: true,
+                        beginAtZero: true
+                    },
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    },
+                    ticks: {
+                        display: true
+                    }
+                }]
+            }
+        }
+    });
+	
+     // ------------------------------------------------------ //	
+	var ctx = document.getElementById("vertical-chart-02").getContext('2d');
+	var myChart = new Chart(ctx, {
+		type: 'bar',
+		data: {
+            labels: ["{{tLogs.date|date:'Y/n/d'}}"],
+			datasets: [{
+				label: 'd1',
+				data: ["{{tLogs.on.0}}"],
+                borderColor: "#fff",
+				backgroundColor: "rgba(93, 83, 134, 0.85)",
+				hoverBackgroundColor: "#5d5386"
+			}, {
+				label: 'd2',
+				data: ["{{tLogs.on.1}}"],
+				borderColor: "#fff",
+				backgroundColor: "#e4e8f0",
+				hoverBackgroundColor: "#dde1e9"
+			}, {
+				label: 'd3',
+				data: ["{{tLogs.on.2}}"],
+				borderColor: "#fff",
+				backgroundColor: "rgba(93, 83, 134, 0.85)",
+				hoverBackgroundColor: "#dde1e9"
+			}, {
+				label: 'd4',
+				data: ["{{tLogs.on.3}}"],
+				borderColor: "#fff",
+				backgroundColor: "#e4e8f0",
+				hoverBackgroundColor: "#dde1e9"
+			}, {
+				label: 'd5',
+				data: ["{{tLogs.on.4}}"],
+				borderColor: "#fff",
+				backgroundColor: "rgba(93, 83, 134, 0.85)",
+				hoverBackgroundColor: "#dde1e9"
+			}, {
+				label: 'd6',
+				data: ["{{tLogs.on.5}}"],
+				borderColor: "#fff",
+				backgroundColor: "#e4e8f0",
+				hoverBackgroundColor: "#dde1e9"
+			}]	
+		},
+		options: {
+			legend: {
+				display: true,
+				position: 'top',
+				labels: {
+					fontColor: "#2e3451",
+					usePointStyle: true,
+					fontSize: 13
+				}
+			},
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 13,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+			scales: {
+				xAxes: [{
+					stacked: false,
+					gridLines: {
+						drawBorder: true,
+						display: true
+					},
+					ticks: {
+						display: true
+					}
+				}],
+				yAxes: [{
+					stacked: false,
+					gridLines: {
+						drawBorder: true,
+						display: true
+					},
+					ticks: {
+						display: true
+					}
+				}]
+			}	
+		}
+	});
+	
+</script>
+
+<script src="{% static 'assets/vendors/js/datatables/datatables.js'%}"></script>
+<script src="{% static 'assets/vendors/js/datatables/dataTables.buttons.min.js'%}"></script>
+<script src="{% static 'assets/js/components/tables/tables.js'%}"></script>
+{% endblock scripts %}

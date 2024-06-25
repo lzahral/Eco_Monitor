@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block page_header %} آلارم ها{% endblock page_header %}
+{% block content %}
+    <div class="col-md-12 col-xl-12 col-xs-12 col-sm-12">
+        <div class="widget has-shadow">
+            <div class="widget-body p-3 ">
+                <div class="m-4 row">
+                    <h4 class="main-content-label"></h4>
+                    <p class='pt-3'></p>
+                    {% if alarms %}
+                    <table class=" col-12 table mt-5 text-center">
+                        <thead>
+                            <tr>
+                                <th>نام دستگاه</th>
+                                <th>ورودی</th>
+                                <th>مقدار</th>
+                                <th>وضعیت فعال بودن</th>
+                                <th></th>
+                                {% comment %} <th></th> {% endcomment %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in alarms %}
+                                <tr>
+                                    <td>{{item.device}}</td>
+                                    <td>ورودی {{item.type}} {{item.target_id}}</td>
+                                    <td>{{item.target}}</td>
+                                    <td><div class='d-flex justify-content-center'>{% if item.is_active %}<span class="badge-pulse-green"></span>{% else %}<span class="badge-pulse"></span>{% endif %}</div></td>
+                                    <td><div class="c-icon" onclick="location.href='{% url "alarms" %}'"><i class="la la-cog"></i></div></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+                <div class='col-12 text-center pb-5'>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-centered">تنظیم آلارم جدید</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-centered" class="modal fade show" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">تنظیم آلارم</h4>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">×</span>
+                        <span class="sr-only">بستن</span>
+                    </button>
+                </div>
+                <div class="modal-body px-5">
+                    <form id='add_alarm' method="POST" class='row pr-0' >
+                        {% csrf_token %}
+                        {{form.errors}}
+                        {% for field in form %} 
+                            <div class="form-group col-12 p-2 m-0">
+                                <p id='{{field.name}}'>{{field.label}}</p>
+                            {% if field.name == 'target_id' %}
+                            <select name='target_id' class="form-control " required="" id="id_target_id">
+                                <option value="" selected="">---------</option>
+                                <option value="1"> ورودی 1</option>
+                                <option value="2"> ورودی 2</option>
+                                <option value="3"> ورودی 3</option>
+                                <option value="4"> ورودی 4</option>
+                            </select>
+                            {% else %}
+                                {{ field|add_class:'form-control '}}
+                                {% if field.errors %}
+                                    <p class="alert alert-danger alert-dismissible fade show mb-0">{{ field.errors|striptags}}</p> 
+                                {% endif %}
+                            {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div class='col-12 text-center pt-3'>
+                            <button type='submit' onClick='test()' class=' btn btn-primary px-5'>تایید</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-shadow" data-dismiss="modal">بستن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{%endblock%}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $("#id_type").change(function () {
+            var val = $(this).val();
+                if (val == '1') {
+                    $('#target').text('مقدار (ماکسیمم)')
+                    $("#id_target_id").html(`
+                    <option value="" selected="">---------</option>
+                    <option value="1"> ورودی 1</option>
+                    <option value="2"> ورودی 2</option>
+                    <option value="3"> ورودی 3</option>
+                    <option value="4"> ورودی 4</option>
+                `)
+                    }
+                else{
+                    console.log('.-.')
+                    $('#target').text('مقدار (دقیقه)')
+                    $("#id_target_id").html(`
+                    <option value="" selected="">---------</option>
+                    <option value="1"> ورودی 1</option>
+                    <option value="2"> ورودی 2</option>
+                    <option value="3"> ورودی 3</option>
+                    <option value="4"> ورودی 4</option>
+                    <option value="5"> ورودی 5</option>
+                    <option value="6"> ورودی 6</option>
+                `)
+                }
+
+            
+        });
+    });
+</script>
+{% endblock scripts %}
+

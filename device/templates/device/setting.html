@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block page_header %}تنظیمات دستگاه{% endblock page_header %}
+
+{% block content %}
+    <div class="">
+        <div class="widget has-shadow">
+            <div class="widget-body p-5 row">
+            {% comment %} <h4 class="main-content-label pb-2">تنظیمات دستگاه</h4> {% endcomment %}
+            <form method="POST" class=' row' >
+                {% csrf_token %}
+                {% for field in form %} 
+                    
+                    {% if  field.name == "name" %}
+                    <div class=" p-3 m-0 col-12 px-3">
+                        <div class='col-2 pt-3 pl-2'>
+                            {{field.label}}
+                        </div>
+                        <br>
+                        {{ field|add_class:'form-control col-sm-12 '}}
+                    {% elif  field.name == "min_temperature" %}
+                    <div class=" p-3 m-0 col-6 ">
+                        <div class='col-12 pt-3'>
+                            {{field.label}}
+                        </div>
+                        <br>
+                        {{ field|add_class:'form-control col-12'}}
+                    {% elif  field.name == "max_temperature" %}
+                    <div class=" p-3 m-0 col-6 ">
+                        <div class='col-12 pt-3'>
+                            {{field.label}}
+                        </div>
+                        <br>
+                        {{ field|add_class:'form-control col-12'}}
+                    {% elif  field.name == "min_humidity" %}
+                    <div class=" p-3 m-0 col-6 ">
+                        <div class='col-12 pt-3'>
+                            {{field.label}}
+                        </div>
+                        <br>
+                        {{ field|add_class:'form-control col-12'}}
+                    {% elif  field.name == "max_humidity" %}
+                    <div class=" p-3 m-0 col-6 ">
+                        <div class='col-12 pt-3'>
+                            {{field.label}}
+                        </div>
+                        <br>
+                        {{ field|add_class:'form-control col-12'}}
+                    {% else %}   
+                    <div class=" p-3 m-0 col-6 row">
+                        <div class='col-3 pt-3'>
+                            {{field.label}}
+                        </div>   
+                        <br>                 
+                        {{field|add_class:''}}
+                        {% endif %}
+                            {% if field.errors %}
+                                <p class="alert alert-danger alert-dismissible fade show mb-0">{{ field.errors|striptags}}</p> 
+                            {% endif %}
+                        </div>
+                {% endfor %}
+                {% comment %} <div class='text-center col-6 pt-3'> {% endcomment %}
+                <div class='col-12 pt-5 text-center'>
+                    <button class=' btn btn-primary px-5'>تایید</button>
+                </div>
+            </form>
+        </div>
+        </div>
+        </div>
+    </div>
+{%endblock%}

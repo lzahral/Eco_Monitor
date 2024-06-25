@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block stylesheets %}
+<style>
+    jdp-container .jdp-day.selected, jdp-container .jdp-day-name.selected {
+        background-color: #5d5386 !important;
+    } 
+    .jdp-icon-plus {
+        display:none !important;
+    }
+    .jdp-icon-minus{
+        display:none !important;
+    }
+    jdp-container .jdp-btn-today, jdp-container .jdp-btn-empty, jdp-container .jdp-btn-close {
+        background: #5d5386 !important;
+    }
+    .size{
+        font-size: 30px !important;
+    }
+</style>
+{% endblock stylesheets %}
+{% block page_header %}اطلاعات دستگاه{% endblock page_header %}
+
+{% block content %}
+    <div class="">
+        <div class="widget has-shadow p-5">
+            <div class="widget-body p-3 row">
+                <div class='row col-12'>
+                    <h4 class='col-12 p-4'>انتخاب بازه زمانی</h4>
+                    <div class="col form-group row d-flex align-items-center">
+                        <div class="col-lg-9">
+                            <div class="form-group">
+                                <form action="" method="POST">
+                                    {% csrf_token %}
+                                    <div class="input-group">
+                                        <span class="input-group-addon px-2">                    
+                                            <i class="las la-calendar-day size"></i>
+                                        </span>
+                                        <input id='fd' data-jdp  class="form-control"  placeholder="از تاریخ" 
+                                            {% if fd %}
+                                            value = {{fd}}
+                                            {% endif %}>
+                                        <span class="input-group-addon px-2">                    
+                                            <i class="las la-calendar-day size"></i>
+                                        </span>
+                                        <input id='td' data-jdp  class="form-control"  placeholder="تا تاریخ" 
+                                            {% if td %}
+                                            value = {{td}}
+                                            {% endif %}>
+                                        <div class='col-auto p-2 px-5'>
+                                            <button id='select_date' class=' btn btn-primary px-5'>تایید</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="widget-body p-5 row">
+                    <h2 class='px-5'>نمودار دما</h2>
+                    <canvas id="line-chart-01" style="display: block; width: 756px; height: 378px;" width="756" height="378" class="col-xl-12 chartjs-render-monitor p-5"></canvas>
+                    <h2 class='pt-5 px-5'>نمودار رطوبت</h2>
+                    <canvas id="line-chart-02" style="display: block; width: 756px; height: 378px;" width="756" height="378" class="col-xl-12 chartjs-render-monitor p-5"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{%endblock%}
+
+{% block scripts %}
+<script>
+    jalaliDatepicker.startWatch();
+
+    $(document).on('click','#select_date',function(e){
+        e.preventDefault();
+        $.ajax({
+            type:'POST',
+            url:"{% url 'device' serial_no %}",
+            data:{
+                fd:$('#fd').val(),
+                td:$('#td').val(),
+                csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+            }
+            ,success: function(data){
+                console.log(data.chartLogs[0].humidity)
+                dataset1=data.chartLogs[0].temperature
+                dataset2=data.chartLogs[0].humidity
+                myChart1.data.datasets[0].data = dataset1
+                myChart2.data.datasets[0].data = dataset2
+         
+                labels=[]
+                dataset1.map((item, index)=>{
+                    labels.push('')
+                })
+                myChart1.data.labels=labels;
+                myChart2.data.labels=labels;
+                myChart1.update();
+                myChart2.update();
+            }
+        });
+    });
+
+    var ctx = document.getElementById('line-chart-01').getContext("2d");
+
+    var myChart1 = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:[{% for item in charts.0.label %}"{{item}}",{% endfor %}],
+            datasets: [
+            {% for item in charts %}
+            {
+                label: "     {{item.name}}",
+                borderColor: '{{item.color}}',
+                pointBackgroundColor: '{{item.color}}',
+                pointHoverBorderColor: '{{item.color}}',
+                pointHoverBackgroundColor: '{{item.color}}',
+                pointBorderColor: "#fff",
+                pointBorderWidth: 0,
+                pointRadius: 2,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for t in item.temperature %}{% if t == None %}null,{% else %}{{t}},{% endif %}{% endfor %}]
+				//data: [{% for log in chartLogs %}"{{log.on.0}}",{% endfor %}],
+            },
+            {% endfor %}
+            ]
+        },
+        options: {
+			legend: {
+				display: false,
+			},
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 14,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        display: true,
+                        //beginAtZero: true
+                    },
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        drawBorder: false,
+                        display: true
+                    },
+                    ticks: {
+                        display: true,
+                        padding: -20,
+                        fontColor:"transparent"                 
+                    },
+                }]
+            }
+        }
+    });
+     var ctx = document.getElementById('line-chart-02').getContext("2d");
+
+    var myChart2 = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:[{% for item in charts.0.label %}"{{item}}",{% endfor %}],
+            datasets: [
+            {% for item in charts %}
+            {
+                label: "     {{item.name}}",
+                borderColor: '{{item.color}}',
+                pointBackgroundColor: '{{item.color}}',
+                pointHoverBorderColor: '{{item.color}}',
+                pointHoverBackgroundColor: '{{item.color}}',
+                pointBorderColor: "#fff",
+                pointBorderWidth: 0,
+                pointRadius: 2,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data:[{% for t in item.humidity %}{% if t == None %}null,{% else %}{{t}},{% endif %}{% endfor %}]
+            },
+            {% endfor %}
+            ]
+        },
+        options: {
+			legend: {
+				display: false,
+			},
+            
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 14,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        display: true,
+                        //beginAtZero: true
+                    },
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    },
+                    ticks: {
+                        display: true,
+                        padding: -20,
+                        fontColor:"transparent"                 
+                    },
+                }]
+            }
+        }
+    });
+</script>
+{% endblock scripts %}
+
+
+
+
+{% comment %} {% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block stylesheets %}
+<style>
+    jdp-container .jdp-day.selected, jdp-container .jdp-day-name.selected {
+        background-color: #5d5386 !important;
+    } 
+    .jdp-icon-plus {
+        display:none !important;
+    }
+    .jdp-icon-minus{
+        display:none !important;
+    }
+    jdp-container .jdp-btn-today, jdp-container .jdp-btn-empty, jdp-container .jdp-btn-close {
+        background: #5d5386 !important;
+    }
+    .size{
+        font-size: 30px !important;
+    }
+</style>
+{% endblock stylesheets %}
+{% block page_header %}اطلاعات دستگاه{% endblock page_header %}
+
+{% block content %}
+    <div class="">
+        <div class="widget has-shadow p-5">
+            <div class="widget-body p-3 row">
+                <div class='row col-12'>
+                    <h4 class='col-12 p-4'>انتخاب بازه زمانی</h4>
+                    <div class="col form-group row d-flex align-items-center">
+                        <div class="col-lg-9">
+                            <div class="form-group">
+                                <form action="" method="POST">
+                                    {% csrf_token %}
+                                    <div class="input-group">
+                                        <span class="input-group-addon px-2">                    
+                                            <i class="las la-calendar-day size"></i>
+                                        </span>
+                                        <input id='fd' data-jdp  class="form-control"  placeholder="از تاریخ" 
+                                            {% if fd %}
+                                            value = {{fd}}
+                                            {% endif %}>
+                                        <span class="input-group-addon px-2">                    
+                                            <i class="las la-calendar-day size"></i>
+                                        </span>
+                                        <input id='td' data-jdp  class="form-control"  placeholder="تا تاریخ" 
+                                            {% if td %}
+                                            value = {{td}}
+                                            {% endif %}>
+                                        <div class='col-auto p-2 px-5'>
+                                            <button id='select_date' class=' btn btn-primary px-5'>تایید</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="widget-body p-5 row">
+            <h2 class='px-5'>نمودار دما در ۷ روز اخیر</h2>
+            <canvas id="line-chart-01" style="display: block; width: 756px; height: 378px;" width="756" height="378" class="col-xl-12 chartjs-render-monitor p-5"></canvas>
+            <h2 class='pt-5 px-5'>نمودار رطوبت در ۷ روز اخیر</h2>
+            <canvas id="line-chart-02" style="display: block; width: 756px; height: 378px;" width="756" height="378" class="col-xl-12 chartjs-render-monitor p-5"></canvas>
+        </div>
+            </div>
+        </div>
+    </div>
+
+{%endblock%}
+
+{% block scripts %}
+<script>
+    var ctx = document.getElementById('line-chart-01').getContext("2d");
+
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:[{% for item in charts.0.label %}"{{item}}",{% endfor %}],
+            datasets: [
+            {% for item in charts %}
+            {
+                label: "     {{item.name}}",
+                borderColor: '{{item.color}}',
+                pointBackgroundColor: '{{item.color}}',
+                pointHoverBorderColor: '{{item.color}}',
+                pointHoverBackgroundColor: '{{item.color}}',
+                pointBorderColor: "#fff",
+                pointBorderWidth: 0,
+                pointRadius: 0,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for t in item.temperature %}{% if t == None %}null,{% else %}{{t}},{% endif %}{% endfor %}]
+				//data: [{% for log in chartLogs %}"{{log.on.0}}",{% endfor %}],
+            },
+            {% endfor %}
+            ]
+        },
+        options: {
+			legend: {
+				display: false,
+				position: 'top',
+				labels: {
+					fontColor: "#2e3451",
+					usePointStyle: true,
+					fontSize: 14
+				}
+			},
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 14,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        display: true,
+                        //beginAtZero: true
+                    },
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        drawBorder: false,
+                        display: true
+                    },
+                    ticks: {
+                        display: true,
+                        padding: -20,
+                        fontColor:"transparent"                 
+                    },
+                }]
+            }
+        }
+    });
+</script>
+<script>
+    var ctx = document.getElementById('line-chart-02').getContext("2d");
+
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:[{% for item in charts.0.label %}"{{item}}",{% endfor %}],
+            datasets: [
+            {% for item in charts %}
+            {
+                label: "     {{item.name}}",
+                borderColor: '{{item.color}}',
+                pointBackgroundColor: '{{item.color}}',
+                pointHoverBorderColor: '{{item.color}}',
+                pointHoverBackgroundColor: '{{item.color}}',
+                pointBorderColor: "#fff",
+                pointBorderWidth: 0,
+                pointRadius: 0,
+                fill: true,
+                
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data:[{% for t in item.humidity %}{% if t == None %}null,{% else %}{{t}},{% endif %}{% endfor %}]
+            },
+            {% endfor %}
+            ]
+        },
+        options: {
+			legend: {
+				display: true,
+				position: 'top',
+				labels: {
+					fontColor: "#2e3451",
+					usePointStyle: true,
+					fontSize: 14
+				}
+			},
+            
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 14,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        display: true,
+                        //beginAtZero: true
+                    },
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    },
+                    ticks: {
+                        display: true,
+                        padding: -20,
+                        fontColor:"transparent"                 
+                    },
+                }]
+            }
+        }
+    });
+</script>
+{% endblock scripts %} {% endcomment %}
+

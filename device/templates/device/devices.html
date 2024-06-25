@@ -1,0 +1,45 @@
+{% extends 'base.html' %} {% load static %} 
+{% block page_header %} دستگاه ها{% endblock page_header %}
+{% block content %}
+<div class="col-md-12 col-xl-12 col-xs-12 col-sm-12">
+    <div class="widget has-shadow">
+        <div class="widget-body p-5 ">
+            {% if devices %}
+            <table class=" table text-center">
+                <thead>
+                    <tr>   
+                        <th>نام دستگاه</th>
+                        <th>شماره سریال</th>
+                        <th>هیتر</th>
+                        <th>کولر</th>
+                        <th>رطوبت ساز</th>
+                        <th>رطوبت گیر</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in devices %}
+                        <tr>
+                            <td>{{item.name}}</td>
+                            <td>{{item.serial_no}}</td>
+                            <td>{% if item.heater %} <span class="badge-text badge-text-small success">روشن</span> {% else %}<span class="badge-text badge-text-small danger">خاموش</span>{% endif %}</td>
+                            <td>{% if item.cooler %} <span class="badge-text badge-text-small success">روشن</span> {% else %}<span class="badge-text badge-text-small danger">خاموش</span>{% endif %}</td>
+                            <td>{% if item.humidifier %} <span class="badge-text badge-text-small success">روشن</span> {% else %}<span class="badge-text badge-text-small danger">خاموش</span>{% endif %}</td>
+                            <td>{% if item.dehumidifier %} <span class="badge-text badge-text-small success">روشن</span> {% else %}<span class="badge-text badge-text-small danger">خاموش</span>{% endif %}</td>
+                            <td class='text-center'><button class="btn btn-primary" onclick="location.href='{% url "device" item.serial_no %}'">مشاهده</button></td>
+                            <td><div class="c-icon" onclick="location.href='{% url "setting" item.serial_no %}'"><i class="la la-cog"></i></div></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="main-error-wrapper  m-4  text-center">
+                <h5>دستگاهی موجود نیست!</h5>
+                <a class="btn btn-outline-danger mt-3" href={% url 'add-device' %} >افزودن دستگاه</a>
+            </div>
+        {% endif %}
+    </div>
+    </div>
+    </div>
+{%endblock%}

@@ -1,0 +1,204 @@
+{% extends 'base.html' %} {% load static %} {% load tz %}
+{% block title %}داشبورد{% endblock title %}
+{% block content %}
+
+<div class=" col-md-12 col-xl-12 col-xs-12 col-sm-12">
+    <div class="widget has-shadow">
+        {{device}}
+        {% if devices == False %}  
+          <div class="main-error-wrapper  m-4  text-center p-5 m-5" >
+                <h5>دستگاهی موجود نیست!</h5>
+                <a class="btn btn-outline-danger mt-3" href={% url 'add-device' %} >افزودن دستگاه</a>
+            </div>
+        {% else %}
+        <div class="widget-body p-5 row">
+            <h2 class='px-5'>نمودار دما در ۷ روز اخیر</h2>
+            <canvas id="line-chart-01" style="display: block; width: 756px; height: 378px;" width="756" height="378" class="col-xl-12 chartjs-render-monitor p-5"></canvas>
+            <h2 class='pt-5 px-5'>نمودار رطوبت در ۷ روز اخیر</h2>
+            <canvas id="line-chart-02" style="display: block; width: 756px; height: 378px;" width="756" height="378" class="col-xl-12 chartjs-render-monitor p-5"></canvas>
+        </div>
+        {% endif %}
+    </div>
+    {% comment %} <div class="col-md-12 col-xl-12 col-xs-12 col-sm-12"> {% endcomment %}
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var ctx = document.getElementById('line-chart-01').getContext("2d");
+
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:[{% for item in charts.0.label %}"{{item}}",{% endfor %}],
+            datasets: [
+            {% for item in charts %}
+            {
+                label: "     {{item.name}}",
+                borderColor: '{{item.color}}',
+                pointBackgroundColor: '{{item.color}}',
+                pointHoverBorderColor: '{{item.color}}',
+                pointHoverBackgroundColor: '{{item.color}}',
+                pointBorderColor: "#fff",
+                pointBorderWidth: 0,
+                pointRadius: 1,
+                fill: true,
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data: [{% for t in item.temperature %}{% if t == None %}null,{% else %}{{t}},{% endif %}{% endfor %}]
+				//data: [{% for log in chartLogs %}"{{log.on.0}}",{% endfor %}],
+            },
+            {% endfor %}
+            ]
+        },
+        options: {
+			legend: {
+				display: true,
+				position: 'top',
+				labels: {
+					fontColor: "#2e3451",
+					usePointStyle: true,
+					fontSize: 14
+				}
+			},
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 14,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        display: true,
+                        //beginAtZero: true
+                    },
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        drawBorder: false,
+                        display: true
+                    },
+                    ticks: {
+                        display: true,
+                        padding: -20,
+                        fontColor:"transparent"                 
+                    },
+                }]
+            }
+        }
+    });
+</script>
+<script>
+    var ctx = document.getElementById('line-chart-02').getContext("2d");
+
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:[{% for item in charts.0.label %}"{{item}}",{% endfor %}],
+            datasets: [
+            {% for item in charts %}
+            {
+                label: "     {{item.name}}",
+                borderColor: '{{item.color}}',
+                pointBackgroundColor: '{{item.color}}',
+                pointHoverBorderColor: '{{item.color}}',
+                pointHoverBackgroundColor: '{{item.color}}',
+                pointBorderColor: "#fff",
+                pointBorderWidth: 0,
+                pointRadius: 1,
+                fill: true,
+                
+                backgroundColor: "transparent",
+                borderWidth: 3,
+				data:[{% for t in item.humidity %}{% if t == None %}null,{% else %}{{t}},{% endif %}{% endfor %}]
+            },
+            {% endfor %}
+            ]
+        },
+        options: {
+			legend: {
+				display: true,
+				position: 'top',
+				labels: {
+					fontColor: "#2e3451",
+					usePointStyle: true,
+					fontSize: 14
+				}
+			},
+            
+            tooltips: {
+                backgroundColor: 'rgba(47, 49, 66, 0.8)',
+                titleFontSize: 14,
+                titleFontColor: '#fff',
+                caretSize: 0,
+                cornerRadius: 4,
+                xPadding: 10,
+                displayColors: false,
+                yPadding: 10
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        display: true,
+                        //beginAtZero: true
+                    },
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    }
+                }],
+                xAxes: [{
+                    gridLines: {
+                        drawBorder: true,
+                        display: true
+                    },
+                    ticks: {
+                        display: true,
+                        padding: -20,
+                        fontColor:"transparent"                 
+                    },
+                }]
+            }
+        }
+    });
+</script>
+{% comment %} <script>
+    var interval = 50000;
+    var refreshData = function() {
+        $.ajax({
+            type:'GET',
+            url:"{% url 'refresh-data' %}",
+            success: function(data){
+                data.data.map((item)=>{
+                    $(`#${item.serial_no}`).html(
+                        (item['a1']?` <p class='col-8'>ورودی انالوگ 1:</p> <p class=' col-4'>${(Number.isInteger(item['a1'])) ? (item['a1'] + ".0") : (item['a1'].toString())}</p>`:"")+ 
+                        (item['a2']?` <p class='col-8'>ورودی انالوگ 2:</p> <p class=' col-4'>${(Number.isInteger(item['a2'])) ? (item['a2'] + ".0") : (item['a2'].toString())}</p>`:"")+
+                        (item['a3']?` <p class='col-8'>ورودی انالوگ 3:</p> <p class=' col-4'>${(Number.isInteger(item['a3'])) ? (item['a3'] + ".0") : (item['a3'].toString())}</p>`:"")+
+                        (item['a4']?` <p class='col-8'>ورودی انالوگ 4:</p> <p class=' col-4'>${(Number.isInteger(item['a4'])) ? (item['a4'] + ".0") : (item['a4'].toString())}</p>`:"")+
+                        (item['d1']!=null?`<p class='col-8'>ورودی دیجیتال 1:</p><div class='col-4 '>${item['d1']?"<span class='badge-pulse-green'></span>":"<span class='tx-crnter badge-pulse'></span>"}</div>`:"")+
+                        (item['d2']!=null?`<p class='col-8'>ورودی دیجیتال 2:</p><div class='col-4 '>${item['d2']?"<span class='badge-pulse-green'></span>":"<span class='tx-crnter badge-pulse'></span>"}</div>`:"")+
+                        (item['d3']!=null?`<p class='col-8'>ورودی دیجیتال 3:</p><div class='col-4 '>${item['d3']?"<span class='badge-pulse-green'></span>":"<span class='tx-crnter badge-pulse'></span>"}</div>`:"")+
+                        (item['d4']!=null?`<p class='col-8'>ورودی دیجیتال 4:</p><div class='col-4 '>${item['d4']?"<span class='badge-pulse-green'></span>":"<span class='tx-crnter badge-pulse'></span>"}</div>`:"")+
+                        (item['d5']!=null?`<p class='col-8'>ورودی دیجیتال 5:</p><div class='col-4 '>${item['d5']?"<span class='badge-pulse-green'></span>":"<span class='tx-crnter badge-pulse'></span>"}</div>`:"")+
+                        (item['d6']!=null?`<p class='col-8'>ورودی دیجیتال 6:</p><div class='col-4 '>${item['d6']?"<span class='badge-pulse-green'></span>":"<span class='tx-crnter badge-pulse'></span>"}</div>`:"")
+                    )
+                })
+            },complete: function (data) {
+                setTimeout(refreshData, interval);
+            }
+        });
+    }; 
+    setTimeout(refreshData, interval);
+</script> {% endcomment %}
+{% endblock scripts %}
