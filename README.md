@@ -16,7 +16,7 @@ https://github.com/lzahral/Eco_Monitor/assets/89585203/ecfdcef9-b77e-49c0-90e9-c
 
 ## Installation
 
-1. Clone the repository:
+1. Clone the repository
 
 2. Create and activate a virtual environment:
 
